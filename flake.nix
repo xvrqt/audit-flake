@@ -5,7 +5,7 @@
   };
 
   outputs =
-    { nixpkgs, nix-index-database, ... }:
+    { nixpkgs, ... }:
     let
       forAllSystems = function:
         nixpkgs.lib.genAttrs [

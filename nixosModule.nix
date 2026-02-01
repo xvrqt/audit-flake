@@ -52,7 +52,7 @@ in
       auditing = {
         enable = lib.mkOption {
           type = lib.types.bool;
-          default = false;
+          default = true;
           description = "Enable logging syscalls using autitd.";
         };
         requireReboot = lib.mkOption {
