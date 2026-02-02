@@ -65,17 +65,6 @@ in
   };
 
   config = lib.mkIf auditCheck {
-    # You must reboot to delete or change a rule 
-    # Recommend you turn this off while testing new configs, but do not forget
-    # to enable it again!
-    boot.kernelParams = lib.mkIf auditIsLockedBehindReboot [ "audit=1" ];
-
-    # Have journald capture logs
-    services.journald.extraConfig = ''
-      Audit=yes
-      MaxlevelAudit=info
-    '';
-
     # Add in tooling to control and search through the audit logs generated
     # Notably:
     # - auditctl: for changing auditd's function (although mostly useless
@@ -102,7 +91,8 @@ in
       };
 
       audit = {
-        enable = lib.mkDefault true;
+        # 'lock' prevents rule changes without a reboot
+        enable = if auditIsLockedBehindReboot then "lock" else false;
         rules = [
           ################
           # SSH AUDITING #
@@ -132,7 +122,8 @@ in
           # "-a exit,always -F arch=b64 -S execve -F path=/run/current-system/sw/bin/sshd -k sshd_execve"
 
           # Track when sshd accepts incoming connections
-          "-a exit,always -F arch=b64 -S accept4 -F exe=/run/current-system/sw/bin/sshd -k sshd_accept"
+          "-a exit,always -F arch=b64 -S accept4 -S accept -F exe=/run/current-system/sw/bin/sshd -k sshd_accept"
+          "-a exit,always -F arch=b64 -S accept4 -S accept -F exe=${config.services.openssh.package}/bin/sshd -k sshd_accept"
 
           ###############
           # USER LOGINS #
@@ -152,6 +143,14 @@ in
           "-w /etc/shadow -p wa -k shadow_changes"
           "-w /etc/sudoers -p wa -k sudoers_changes"
           "-w /etc/sudoers.d/ -p wa -k sudoers_dir"
+
+          ##################
+          # KERNEL MODULES #
+          ##################
+          "-w /sbin/insmod -p x -k modules"
+          "-w /sbin/rmmod -p x -k modules"
+          "-w /sbin/modprobe -p x -k modules"
+          "-a always,exit -F arch=b64 -S init_module -S delete_module -k modules"
         ];
       };
     };
