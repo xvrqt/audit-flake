@@ -117,12 +117,9 @@ in
           "-w /etc/pam.d/ -p wa -k pam_config"
 
           # Monitor when sshd is run
-          "-w /run/current-system/sw/bin/sshd -p x -k sshd_execution"
-          # Use this version if you want to see which arguments are passed
-          # "-a exit,always -F arch=b64 -S execve -F path=/run/current-system/sw/bin/sshd -k sshd_execve"
+          "-w ${config.services.openssh.package}/bin/sshd -p x -k sshd_execution"
 
           # Track when sshd accepts incoming connections
-          "-a exit,always -F arch=b64 -S accept4 -S accept -F exe=/run/current-system/sw/bin/sshd -k sshd_accept"
           "-a exit,always -F arch=b64 -S accept4 -S accept -F exe=${config.services.openssh.package}/bin/sshd -k sshd_accept"
 
           ###############
@@ -147,9 +144,7 @@ in
           ##################
           # KERNEL MODULES #
           ##################
-          "-w /sbin/insmod -p x -k modules"
-          "-w /sbin/rmmod -p x -k modules"
-          "-w /sbin/modprobe -p x -k modules"
+          "-w ${pkgs.kmod}/bin/kmod -p x -k modules"
           "-a always,exit -F arch=b64 -S init_module -S delete_module -k modules"
         ];
       };
