@@ -92,7 +92,7 @@ in
 
       audit = {
         # 'lock' prevents rule changes without a reboot
-        enable = if auditIsLockedBehindReboot then "lock" else false;
+        enable = if auditIsLockedBehindReboot then "lock" else auditCheck;
         rules = [
           ################
           # SSH AUDITING #
